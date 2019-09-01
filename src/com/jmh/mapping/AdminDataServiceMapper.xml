@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jmh.dao.AdminDataService">
+ 
+  <resultMap id="UserResultMap" type="com.jmh.model.User" >
+    <id 	column="ID" 				property="id" 				jdbcType="VARCHAR" />
+    <result column="USER_ID" 			property="userId" 			jdbcType="VARCHAR" />
+    <result column="USER_NAME" 			property="userName" 		jdbcType="VARCHAR" />
+    <result column="PHONE " 			property="phone" 			jdbcType="VARCHAR" />
+    <result column="SOCIAL_ID_NUMBER" 	property="socialId" 		jdbcType="VARCHAR" />
+    <result column="OFFICER_NUMBER" 	property="officerNumber" 	jdbcType="VARCHAR" />
+    <result column="OFFICER_IMAGE" 		property="officerImage" 	jdbcType="VARCHAR" />
+    <result column="RESIDENT" 			property="resident" 		jdbcType="VARCHAR" />
+    <result column="JOIN_TIME" 			property="joinTime" 		jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <resultMap id="CompanyRoleResultMap" type="com.jmh.model.CompanyRole" >
+    <result column="COMPANY_ID" 		property="companyRoleId" 	jdbcType="VARCHAR" />
+    <result column="COMPANY_NAME" 		property="companyName" 		jdbcType="VARCHAR" />
+    <result column="OFFICIAL_NUMBER" 	property="officialNumber" 	jdbcType="VARCHAR" />
+    <result column="OFFICIAL_IMAGE" 	property="officialImage" 	jdbcType="VARCHAR" />
+    <result column="PHONE" 				property="phone" 			jdbcType="VARCHAR" />
+    <result column="COMPANY_CONTACTS" 	property="companyContacts" 	jdbcType="VARCHAR" />
+    <result column="JOIN_TIME" 			property="joinTime" 		jdbcType="TIMESTAMP" />
+    <result column="ACCOUNT" 			property="account" 			jdbcType="VARCHAR" />
+    <result column="PASSWORD" 			property="password" 		jdbcType="VARCHAR" />
+    <result column="ACCESS_LEVEL" 		property="access_level" 	jdbcType="VARCHAR" />
+  </resultMap>
+   
+  <select id="isAuthorized" resultType="boolean" parameterType="com.jmh.model.LoginInfo">
+  	<![CDATA[SELECT COUNT(1) FROM JMH_ROLE WHERE ACCOUNT =  #{loginName} AND PASSWORD = #{loginPwd} AND ACCESS_LEVEL = '0']]> 
+  </select>
+  
+  <select id="getUserCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_USER 
+  </select>
+  
+  <select id="getCompanyCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_COMPANY 
+  </select>
+  
+  <select id="getNewUserCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_USER WHERE TO_DAYS(CREATED_TIME) = TO_DAYS(NOW())
+  </select>
+  
+  <select id="getAllUser" resultMap="UserResultMap">
+  	SELECT ID, USER_ID, USER_NAME, PHONE, SOCIAL_ID_NUMBER, OFFICER_NUMBER, OFFICER_IMAGE, RESIDENT, CREATED_TIME AS JOIN_TIME 
+  		FROM JMH_USER ORDER BY JOIN_TIME DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="newUserId" resultType="java.lang.String">
+  	SELECT CONCAT('jmhs',DATE_FORMAT(now(),'%Y%m%d'), (SELECT NEXTVAL('userSeq')))
+  </select>
+  
+  <insert id="newUser" parameterType="com.jmh.model.User" >
+    INSERT INTO JMH_User (USER_ID, USER_NAME, PHONE, SOCIAL_ID_NUMBER, OFFICER_NUMBER, OFFICER_IMAGE, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{userId}, #{userName}, #{phone}, #{socialId}, #{officerNumber}, #{officerImage}, 'ADMIN',  now())
+  </insert>
+  
+  <update id="bindPhone" parameterType="com.jmh.model.User">
+  	UPDATE JMH_USER SET 
+  		PHONE = #{phone},
+  		UPDATED_BY = 'USER', UPDATED_TIME = now()
+  		WHERE OPEN_ID = #{openId}
+  </update>
+  
+  <select id="getAllCompany" resultMap="CompanyRoleResultMap">
+  	SELECT COMPANY_ID, COMPANY_NAME, OFFICIAL_NUMBER, OFFICIAL_IMAGE, PHONE, COMPANY_CONTACTS, JC.CREATED_TIME AS JOIN_TIME, 
+  		ACCOUNT, PASSWORD, ACCESS_LEVEL
+  		FROM JMH_COMPANY JC 
+  		LEFT JOIN JMH_ROLE ON COMPANY_ID = ROLE_ID
+  		ORDER BY JOIN_TIME DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="newCompanyId" resultType="java.lang.String">
+  	SELECT CONCAT('jmhb',DATE_FORMAT(now(),'%Y%m%d'), (SELECT NEXTVAL('companySeq')))
+  </select>
+  
+  <insert id="newCompany" parameterType="com.jmh.model.Company">
+	INSERT INTO JMH_COMPANY (COMPANY_ID, COMPANY_NAME, COMPANY_CONTACTS, PHONE, CREATED_BY, CREATED_TIME) 
+		VALUES (#{companyId}, #{companyName}, #{companyContacts}, #{phone}, 'ADMIN',  now())
+  </insert>
+  
+  <insert id="newRole" parameterType="com.jmh.model.Role" >
+    INSERT INTO JMH_ROLE (ROLE_ID, ACCOUNT, PASSWORD, ACCESS_LEVEL, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{roleId}, #{account}, #{password}, '1', 'ADMIN',  now())
+  </insert>
+  
+   <update id="updateCompany" parameterType="com.jmh.model.Company">
+  	UPDATE JMH_COMPANY SET 
+  		COMPANY_NAME = #{companyName}, COMPANY_CONTACTS =  #{companyContacts}, PHONE =  #{phone}, 
+  		UPDATED_BY = 'ADMIN', UPDATED_TIME = now()
+  		WHERE COMPANY_ID = #{companyId}
+  </update>
+  
+  <update id="updateRole" parameterType="com.jmh.model.Role">
+  	UPDATE JMH_ROLE SET 
+  		ACCOUNT = #{account}, PASSWORD =  #{password}, 
+  		UPDATED_BY = 'ADMIN', UPDATED_TIME = now()
+  		WHERE ROLE_ID = #{roleId}
+  </update>
+  
+  <select id="companyLogin" resultMap="CompanyRoleResultMap" parameterType="com.jmh.model.LoginInfo">
+  	SELECT COMPANY_ID, COMPANY_NAME, OFFICIAL_NUMBER, OFFICIAL_IMAGE, PHONE, COMPANY_CONTACTS, JC.CREATED_TIME AS JOIN_TIME, 
+  		ACCOUNT, PASSWORD, ACCESS_LEVEL
+  		FROM JMH_COMPANY JC 
+  		LEFT JOIN JMH_ROLE ON COMPANY_ID = ROLE_ID
+  		WHERE ACCOUNT =  #{loginName} AND PASSWORD = #{loginPwd}
+  </select>
+</mapper>

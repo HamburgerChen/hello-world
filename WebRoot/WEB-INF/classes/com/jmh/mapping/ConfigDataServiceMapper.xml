@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jmh.dao.ConfigDataService">
+
+  <update id="updateConfigInfo">
+  	UPDATE JMH_CONFIG SET 
+  	CONFIG_VALUE = #{configValue}, EXPIRES_IN = #{expiresIn},
+  	UPDATED_BY = 'SYS TIMER', UPDATED_TIME = now()
+  	WHERE CONFIG_KEY = #{configKey}
+  </update>
+  
+  <select id="getConfigValue" resultType="String">
+  	SELECT CONFIG_VALUE FROM JMH_CONFIG WHERE  CONFIG_KEY = #{configKey}
+  </select>
+  
+</mapper>

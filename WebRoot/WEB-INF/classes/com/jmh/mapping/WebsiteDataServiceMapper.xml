@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jmh.dao.WebsiteDataService" >
+  <resultMap id="BaseResultMap" type="com.jmh.model.Visitor" >
+    <result column="VISITOR_NAME" 		property="visitorName" 		jdbcType="VARCHAR" />
+    <result column="PHONE" 				property="phone" 			jdbcType="VARCHAR" />
+    <result column="VISITOR_TYPE" 		property="visitorType" 		jdbcType="VARCHAR" />
+    <result column="TYPE_NAME" 			property="visitorTypeName" 	jdbcType="VARCHAR" />
+    <result column="VISITOR_STATUS" 	property="visitorStatus" 	jdbcType="VARCHAR" />
+    <result column="SUBMIT_TIME" 		property="sumbitTime" 		jdbcType="TIMESTAMP" />
+  </resultMap>
+ <!--  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from tadd
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from tadd
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.jmh.model.Visitor" >
+    insert into tadd (id, tname, tpwd
+      )
+    values (#{id,jdbcType=VARCHAR}, #{tname,jdbcType=VARCHAR}, #{tpwd,jdbcType=VARCHAR}
+      )
+  </insert>
+  -->
+  <select id="getAllVisitor" resultMap="BaseResultMap">
+  	SELECT V.ID, VISITOR_NAME, PHONE, V.VISITOR_TYPE, VT.TYPE_NAME, IF(VISITOR_STATUS='Y','有意向','暂无意向') AS VISITOR_STATUS, 
+  		IFNULL(V.UPDATED_TIME, V.CREATED_TIME) AS SUBMIT_TIME
+  		FROM JMH_VISITOR V LEFT JOIN JMH_TYPE_VISITOR VT ON V.VISITOR_TYPE = VT.VISITOR_TYPE
+  		ORDER BY SUBMIT_TIME DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="getUserCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_VISITOR 
+  </select>
+  
+  
+  <insert id="insertVisitor" parameterType="com.jmh.model.Visitor" >
+    INSERT INTO JMH_VISITOR (VISITOR_NAME, PHONE, VISITOR_TYPE, VISITOR_STATUS, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{visitorName}, #{phone}, #{visitorType}, #{visitorStatus}, 'SYSTEM',  now())
+  </insert>
+  
+  <update id="updateVisitor" parameterType="com.jmh.model.Visitor" >
+  	UPDATE JMH_VISITOR SET 
+  		VISITOR_NAME = #{visitorName}, PHONE = #{phone}, VISITOR_TYPE =  #{visitorType}, 
+  		VISITOR_STATUS = #{visitorStatus}, UPDATED_BY = 'ADMIN', UPDATED_TIME = now()
+  		WHERE ID = #{ID}
+  </update>
+  
+  <delete id="deleteVisitor" parameterType="java.lang.String" >
+    DELETE FROM JMH_VISITOR WHERE ID = #{ID}
+  </delete>
+  <!-- 
+  <update id="updateByPrimaryKeySelective" parameterType="com.jmh.model.Visitor" >
+    update tadd
+    <set >
+      <if test="tname != null" >
+        tname = #{tname,jdbcType=VARCHAR},
+      </if>
+      <if test="tpwd != null" >
+        tpwd = #{tpwd,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jmh.model.Visitor" >
+    update tadd
+    set tname = #{tname,jdbcType=VARCHAR},
+      tpwd = #{tpwd,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  
+  <select id="getAll" resultMap="BaseResultMap">
+  	SELECT * FROM tadd
+  </select>
+   -->
+</mapper>

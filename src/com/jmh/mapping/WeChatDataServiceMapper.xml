@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jmh.dao.WeChatDataService" >
+  <resultMap id="jobProvidedResultMap" type="com.jmh.model.JobProvidedInfo" >
+    <result column="JOB_ID" 		property="jobId" 			jdbcType="VARCHAR" />
+    <result column="JOB_NAME" 		property="jobName" 			jdbcType="VARCHAR" />
+    <result column="SALARY_RANGE" 	property="salaryRange" 		jdbcType="VARCHAR" />
+    <result column="LOCATION" 		property="location" 		jdbcType="VARCHAR" />
+    <result column="COMPANY_ID" 	property="companyId" 		jdbcType="VARCHAR" />
+    <result column="COMPANY_NAME" 	property="companyName" 		jdbcType="VARCHAR" />
+    <result column="JOB_DESC" 		property="jobDesc" 			jdbcType="VARCHAR" />
+    <result column="EDU_TYPE" 		property="eduKey" 			jdbcType="INTEGER" />
+    <result column="EDU" 			property="eduValue" 		jdbcType="VARCHAR" />
+    <result column="INDUSTRY_TYPE" 	property="industryKey" 		jdbcType="CHAR" />
+    <result column="INDUSTRY" 		property="industryValue" 	jdbcType="VARCHAR" />
+    <result column="COMP_SIZE_TYPE" property="compSizeKey" 		jdbcType="CHAR" />
+    <result column="COMP_SIZE" 		property="compSizeValue" 	jdbcType="VARCHAR" />
+    <result column="JOB_EXP_TYPE" 	property="jobExpKey" 		jdbcType="CHAR" />
+    <result column="JOB_EXP" 		property="jobExpValue" 		jdbcType="VARCHAR" />
+    <result column="UPDATED_TIME" 	property="updateTime" 		jdbcType="TIMESTAMP" />
+    <result column="UPDATED_BY" 	property="updateBy" 		jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <resultMap id="jobWantedResultMap" type="com.jmh.model.JobWantedInfo" >
+    <result column="WANTED_ID" 		property="wantedId" 	jdbcType="VARCHAR" />
+    <result column="WANTED_NAME" 	property="wantedName" 	jdbcType="VARCHAR" />
+    <result column="MALE" 			property="male" 		jdbcType="CHAR" />
+    <result column="AGE" 			property="age" 			jdbcType="INTEGER" />
+    <result column="EDU_TYPE" 		property="eduKey" 		jdbcType="CHAR" />
+    <result column="SERVE_EXP" 		property="serveExp" 	jdbcType="VARCHAR" />
+    <result column="WANTED_JOB1" 	property="wantedJob1" 	jdbcType="INTEGER" />
+    <result column="WANTED_JOB2" 	property="wantedJob2" 	jdbcType="VARCHAR" />
+    <result column="WANTED_PLACE" 	property="wantedPlace" 	jdbcType="VARCHAR" />
+    <result column="ADVANTAGE1" 	property="advantage1" 	jdbcType="VARCHAR" />
+    <result column="ADVANTAGE2" 	property="advantage2" 	jdbcType="VARCHAR" />
+    <result column="UPDATED_TIME" 	property="updateTime" 	jdbcType="TIMESTAMP" />
+    <result column="UPDATED_BY" 	property="updateBy" 	jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <select id="getAllJobProvidedInfo" resultMap="jobProvidedResultMap">
+  	SELECT JOB_ID, JOB_NAME, SALARY_RANGE, LOCATION, COMPANY_ID, COMPANY_NAME, JOB_DESC, TE.EDU_TYPE, TE.EDU, TI.INDUSTRY_TYPE, TI.INDUSTRY, 
+  		TCS.COMP_SIZE_TYPE, TCS.COMP_SIZE, TJE.JOB_EXP_TYPE, TJE.JOB_EXP, 
+  		IFNULL(JP.UPDATED_TIME, JP.CREATED_TIME) AS UPDATED_TIME, IFNULL(JP.UPDATED_BY, JP.CREATED_BY) AS UPDATED_BY
+  		FROM JMH_JOB_PROVIDED JP
+  		LEFT JOIN JMH_TYPE_EDU TE ON JP.EDU_TYPE = TE.EDU_TYPE
+  		LEFT JOIN JMH_TYPE_INDUSTRY TI ON JP.INDUSTRY_TYPE = TI.INDUSTRY_TYPE
+  		LEFT JOIN JMH_TYPE_COMP_SIZE TCS ON JP.COMP_SIZE_TYPE = TCS.COMP_SIZE_TYPE
+  		LEFT JOIN JMH_TYPE_JOB_EXP TJE ON JP.JOB_EXP_TYPE = TJE.JOB_EXP_TYPE
+  		ORDER BY IFNULL(JP.UPDATED_TIME, JP.CREATED_TIME) DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="getAllJobWantedInfo" resultMap="jobWantedResultMap">
+  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, 
+  		IFNULL(JW.UPDATED_TIME, JW.CREATED_TIME) AS UPDATED_TIME, IFNULL(JW.UPDATED_BY, JW.CREATED_BY) AS UPDATED_BY
+  		FROM JMH_JOB_WANTED JW
+  		LEFT JOIN JMH_TYPE_EDU TE ON JW.EDU_TYPE = TE.EDU_TYPE
+  		ORDER BY IFNULL(JW.UPDATED_TIME, JW.CREATED_TIME) DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="getJobProvidedInfo" resultMap="jobProvidedResultMap" parameterType="java.lang.String">
+  	SELECT JOB_ID, JOB_NAME, SALARY_RANGE, LOCATION, COMPANY_ID, COMPANY_NAME, JOB_DESC, TE.EDU_TYPE, TE.EDU, TI.INDUSTRY_TYPE, TI.INDUSTRY, 
+  		TCS.COMP_SIZE_TYPE, TCS.COMP_SIZE, TJE.JOB_EXP_TYPE, TJE.JOB_EXP, 
+  		IFNULL(JP.UPDATED_TIME, JP.CREATED_TIME) AS UPDATED_TIME, IFNULL(JP.UPDATED_BY, JP.CREATED_BY) AS UPDATED_BY
+  		FROM JMH_JOB_PROVIDED JP
+  		LEFT JOIN JMH_TYPE_EDU TE ON JP.EDU_TYPE = TE.EDU_TYPE
+  		LEFT JOIN JMH_TYPE_INDUSTRY TI ON JP.INDUSTRY_TYPE = TI.INDUSTRY_TYPE
+  		LEFT JOIN JMH_TYPE_COMP_SIZE TCS ON JP.COMP_SIZE_TYPE = TCS.COMP_SIZE_TYPE
+  		LEFT JOIN JMH_TYPE_JOB_EXP TJE ON JP.JOB_EXP_TYPE = TJE.JOB_EXP_TYPE
+  		WHERE JOB_ID = #{jobId}
+  </select>
+  
+  <select id="getJobWantedInfo" resultMap="jobWantedResultMap" parameterType="java.lang.String">
+  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, 
+  		IFNULL(JW.UPDATED_TIME, JW.CREATED_TIME) AS UPDATED_TIME, IFNULL(JW.UPDATED_BY, JW.CREATED_BY) AS UPDATED_BY
+  		FROM JMH_JOB_WANTED JW
+  		LEFT JOIN JMH_TYPE_EDU TE ON JW.EDU_TYPE = TE.EDU_TYPE
+  		WHERE WANTED_ID = #{wantedId}
+  </select>
+  
+  <select id="getAllJobWantedCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_JOB_WANTED
+  </select>
+  
+  <select id="getJobProvidedCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_JOB_PROVIDED
+  </select>
+  
+  <select id="getAllJobPvdInfoByCompId" resultMap="jobProvidedResultMap">
+  	SELECT JOB_ID, JOB_NAME, SALARY_RANGE, LOCATION, COMPANY_ID, COMPANY_NAME, JOB_DESC, TE.EDU_TYPE, TE.EDU, TI.INDUSTRY_TYPE, TI.INDUSTRY, 
+  		TCS.COMP_SIZE_TYPE, TCS.COMP_SIZE, TJE.JOB_EXP_TYPE, TJE.JOB_EXP, 
+  		IFNULL(JP.UPDATED_TIME, JP.CREATED_TIME) AS UPDATED_TIME, IFNULL(JP.UPDATED_BY, JP.CREATED_BY) AS UPDATED_BY
+  		FROM JMH_JOB_PROVIDED JP
+  		LEFT JOIN JMH_TYPE_EDU TE ON JP.EDU_TYPE = TE.EDU_TYPE
+  		LEFT JOIN JMH_TYPE_INDUSTRY TI ON JP.INDUSTRY_TYPE = TI.INDUSTRY_TYPE
+  		LEFT JOIN JMH_TYPE_COMP_SIZE TCS ON JP.COMP_SIZE_TYPE = TCS.COMP_SIZE_TYPE
+  		LEFT JOIN JMH_TYPE_JOB_EXP TJE ON JP.JOB_EXP_TYPE = TJE.JOB_EXP_TYPE
+  		WHERE COMPANY_ID = #{companyId}
+  		ORDER BY JP.CREATED_TIME DESC LIMIT #{startPage}, #{pageSize}
+  </select>
+  
+  <select id="getJobProvidedCompCount" resultType="int">
+  	SELECT COUNT(1) FROM JMH_JOB_PROVIDED WHERE COMPANY_ID = #{companyId}
+  </select>
+  
+  <select id="newJobProvidedId" resultType="java.lang.String">
+  	SELECT CONCAT('JOB',DATE_FORMAT(now(),'%Y%m%d'), (SELECT NEXTVAL('jobProvidedSeq')))
+  </select>
+  
+  <select id="newJobWantedId" resultType="java.lang.String">
+  	SELECT CONCAT('JOB',DATE_FORMAT(now(),'%Y%m%d'), (SELECT NEXTVAL('jobWantedSeq')))
+  </select>
+  
+  <insert id="newJobProvidedInfo" parameterType="com.jmh.model.JobProvidedInfo" >
+    INSERT INTO JMH_JOB_PROVIDED (JOB_ID, JOB_NAME, SALARY_RANGE, LOCATION, COMPANY_ID, COMPANY_NAME, JOB_DESC, CREATED_BY, CREATED_TIME, EDU_TYPE, INDUSTRY_TYPE, COMP_SIZE_TYPE, JOB_EXP_TYPE) 
+    	VALUES (#{jobId}, #{jobName}, #{salaryRange}, #{location}, #{companyId}, #{companyName}, #{jobDesc}, #{updateBy},  now(), #{eduKey}, #{industryKey}, #{compSizeKey}, #{jobExpKey})
+  </insert>
+  
+  <insert id="newJobWantedInfo" parameterType="com.jmh.model.JobWantedInfo" >
+    INSERT INTO JMH_JOB_WANTED (WANTED_ID, WANTED_NAME, MALE, AGE, EDU_TYPE, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{wantedId}, #{wantedName}, #{male}, #{age}, #{eduKey}, #{serveExp}, #{wantedJob1}, #{wantedJob2}, #{wantedPlace}, #{advantage1}, #{advantage2}, #{updateBy}, now())
+  </insert>
+  
+  <update id="updateJobProvidedInfo" parameterType="com.jmh.model.JobProvidedInfo" >
+  	UPDATE JMH_JOB_PROVIDED SET 
+  		JOB_NAME = #{jobName}, SALARY_RANGE = #{salaryRange}, LOCATION =  #{location}, COMPANY_ID = #{companyId}, COMPANY_NAME = #{companyName}, JOB_DESC = #{jobDesc},
+  		UPDATED_BY = #{updateBy}, UPDATED_TIME = now(), EDU_TYPE = #{eduKey}, INDUSTRY_TYPE =  #{industryKey}, COMP_SIZE_TYPE = #{compSizeKey}, JOB_EXP_TYPE = #{jobExpKey}
+  		WHERE JOB_ID = #{jobId}
+  </update>
+  
+  <delete id="deleteJobProvidedInfo" parameterType="java.lang.String" >
+    DELETE FROM JMH_JOB_PROVIDED WHERE JOB_ID = #{jobId}
+  </delete>
+  
+  <select id="getPhone" parameterType="java.lang.String" resultType="java.lang.String">
+  	SELECT PHONE FROM JMH_USER WHERE USER_ID = #{openId}
+  </select>
+</mapper>
