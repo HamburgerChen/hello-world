@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jmh.model.BaseJobProvidedResult;
@@ -31,7 +32,6 @@ import com.jmh.model.LoginInfo;
 import com.jmh.model.User;
 import com.jmh.model.WeChatUserInfo;
 import com.jmh.model.WeChatUserResult;
-import com.jmh.model.WeChatValidator;
 import com.jmh.service.AdminService;
 import com.jmh.service.ConfigService;
 import com.jmh.service.WeChatService;
@@ -66,12 +66,47 @@ public class WeChatController {
 	}
 
 	@RequestMapping(value = "/checkSignature", method = RequestMethod.GET)
-	public void checkSignature(WeChatValidator validator, HttpServletRequest req, HttpServletResponse resp)
+	public void checkSignature(HttpServletRequest request, HttpServletResponse resp)
 			throws ServletException, IOException {
+		String signature = request.getParameter("signature");
+		String timestamp = request.getParameter("timestamp");
+		String nonce = request.getParameter("nonce");
+		String echostr = request.getParameter("echostr");
 		PrintWriter out = resp.getWriter();
-		if (WeChatUtils.checkSignature(validator.getSignature(), validator.getTimestamp(), validator.getNonce())) {
-			out.print(validator.getEchostr());
+		if (WeChatUtils.checkSignature(signature, timestamp, nonce)) {
+			out.print(echostr);
+			out.close();
+			out = null;
 		}
+	}
+
+	@RequestMapping(value = "/checkSignature", method = RequestMethod.POST)
+	@ResponseBody
+	public String getWeiXinMessage(HttpServletRequest request, HttpServletResponse response) throws Exception
+	{
+		String respXml = null;
+		// 将请求、响应的编码均设置为UTF-8（防止中文乱码）
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+ 
+		// 接收参数微信加密签名、 时间戳、随机数
+		String signature = request.getParameter("signature");
+		String timestamp = request.getParameter("timestamp");
+		String nonce = request.getParameter("nonce");
+		PrintWriter out = response.getWriter();
+		// 请求校验
+		if (WeChatUtils.checkSignature(signature, timestamp, nonce)) {
+		// 调用核心服务类接收处理请求
+			respXml = weChatService.processRequest(request);
+			log.info("respXml: \n" + respXml);
+			if(respXml!=null){
+				response.setContentType("text/html;charset=UTF-8");
+				out.print(respXml);
+			}
+		}
+		out.close();
+		out = null;
+		return null;
 	}
 
 	/**
@@ -97,7 +132,7 @@ public class WeChatController {
 		HttpSession session = request.getSession();
 		session.setAttribute(Constants.LOGIN_INFO, info);
 		CompanyRole compRole = adminService.companyLogin(info);
-		if (compRole!=null) {
+		if (compRole != null) {
 			result.setCompRole(compRole);
 			result.setStatusCode(Constants.SUCCESS);
 		} else {
@@ -134,10 +169,9 @@ public class WeChatController {
 		log.info("entering getWechatUserInfo function...");
 		WeChatUserResult result = new WeChatUserResult();
 		// 首先判断一下session中，是否有保存着的当前用户的信息，有的话，就不需要进行重复请求信息
-		WeChatUserInfo weChatUser = new WeChatUserInfo();
-		if (session.getAttribute("currentUserInfo") != null) {
+		WeChatUserInfo weChatUser = (WeChatUserInfo) session.getAttribute("currentUserInfo");
+		if (session.getAttribute("currentUserInfo") != null && weChatUser.getOpenid() != null) {
 			log.info("currentUserInfo is logon...");
-			weChatUser = (WeChatUserInfo) session.getAttribute("currentUserInfo");
 			log.info("weChatUser openid: " + weChatUser.getOpenid());
 		} else {
 			/**
@@ -149,11 +183,13 @@ public class WeChatController {
 			try {
 				// 得到当前用户的信息(具体信息就看weixinUser这个javabean)
 				String openId = WeChatUtils.oauth2GetOpenid(code);
+				if (openId == null) {
+					result.setStatusCode(Constants.FAILUE);
+					WebUtils.responseJson(result, response);
+					return null;
+				}
 				weChatUser = WeChatUtils.getWeChatUserInfo(configService.getConfigValue(Constants.ACCESS_TOKEN_KEY),
 						openId);
-				User user = new User();
-				user.setOpenId(openId);
-				adminService.newUser(user);
 				// 将获取到的用户信息，放入到session中
 				session.setAttribute("currentUserInfo", weChatUser);
 				result.setStatusCode(Constants.SUCCESS);
@@ -162,6 +198,12 @@ public class WeChatController {
 				result.setMessage(e.getMessage());
 				log.error(e.getMessage());
 			}
+		}
+		User user = new User();
+		user.setOpenId(weChatUser.getOpenid());
+		if (!adminService.isExistedUser(weChatUser.getOpenid())) {
+			log.info("new user for openId = " + weChatUser.getOpenid());
+			adminService.newUser(user);
 		}
 		result.setWeChatUserInfo(weChatUser);
 		WebUtils.responseJson(result, response);
@@ -193,7 +235,7 @@ public class WeChatController {
 	}
 
 	/**
-	 * @api {get} jmh/weChat/sms?telephone=15990111539 验证码发送
+	 * @api {get} jmh/weChat/sms 验证码发送
 	 * 
 	 * @apiVersion 1.0.0
 	 * @apiGroup weChat
@@ -233,13 +275,13 @@ public class WeChatController {
 	}
 
 	/**
-	 * @api {get} jmh/weChat/getPhone 累计注册军人数
+	 * @api {get} jmh/weChat/getPhone 获取手机号码
 	 * @apiVersion 1.0.0
 	 * 
 	 * @apiGroup weChat
 	 * @apiName getPhone
 	 * 
-	 * @apiParam {String} jmhsId 军人编号
+	 * @apiParam {String} openId 微信openId
 	 * 
 	 * @apiSuccess {String} message 成功返回phone，失败返回错误
 	 * @apiSuccess {int} statusCode 0 代表无错误 1代表有错误状态
@@ -249,8 +291,12 @@ public class WeChatController {
 	public BaseResult getPhone(String openId, HttpServletResponse response) {
 		BaseResult result = new BaseResult();
 		String phone = weChatService.getPhone(openId);
-		result.setStatusCode(Constants.SUCCESS);
-		result.setMessage(phone);
+		if (phone != null) {
+			result.setStatusCode(Constants.SUCCESS);
+			result.setMessage(phone);
+		} else {
+			result.setStatusCode(Constants.FAILUE);
+		}
 		WebUtils.responseJson(result, response);
 		return null;
 	}
@@ -272,9 +318,27 @@ public class WeChatController {
 	@RequestMapping(value = "/bindPhone", method = RequestMethod.GET)
 	public BaseResult bindPhone(String openId, String telephone, HttpServletResponse response) {
 		BaseResult result = new BaseResult();
-		String phone = adminService.bindPhone(telephone, openId);
-		result.setStatusCode(Constants.SUCCESS);
-		result.setMessage(phone);
+		int updateCode = Constants.DB_PROCESS_FAILUE;
+		if (openId == null) {
+			result.setStatusCode(Constants.FAILUE);
+			result.setMessage("openId参数等于null");
+		}
+
+		if (!adminService.isExistedUser(openId)) {
+			User user = new User();
+			user.setOpenId(openId);
+			user.setPhone(telephone);
+			log.info("new user for openId = " + openId);
+			updateCode = adminService.newUser(user);
+		} else {
+			updateCode = adminService.bindPhone(telephone, openId);
+		}
+		if (updateCode == Constants.DB_PROCESS_SUCCESS) {
+			result.setStatusCode(Constants.SUCCESS);
+			result.setMessage(telephone);
+		} else {
+			result.setStatusCode(Constants.FAILUE);
+		}
 		WebUtils.responseJson(result, response);
 		return null;
 	}
@@ -362,7 +426,7 @@ public class WeChatController {
 	}
 
 	/**
-	 * @api {get} jmh/weChat/getJobPvdInfoByJobId 获取职位详情
+	 * @api {get} jmh/weChat/getJobPvdByJobId 获取职位详情
 	 * 
 	 * @apiVersion 1.0.0
 	 * 
@@ -469,6 +533,7 @@ public class WeChatController {
 	 * 
 	 * @apiParam {String} jobName 职位名称
 	 * @apiParam {String} salaryRange 薪资范围
+	 * @apiParam {String} locationCode 地址代码
 	 * @apiParam {String} location 工作地点
 	 * @apiParam {String} companyId 公司编号
 	 * @apiParam {String} companyName 公司名称
@@ -592,11 +657,13 @@ public class WeChatController {
 	 * @apiSuccess {int} age 求职者年龄
 	 * @apiSuccess {char} eduKey 学历类型
 	 * @apiSuccess {String} serveExp 服役经历
+	 * @apiSuccess {String} wantedSalary 期望薪资
 	 * @apiSuccess {String} wantedPlace 期望工作地点
 	 * @apiSuccess {String} wantedJob1 期望职位1
 	 * @apiSuccess {String} wantedJob2 期望职位2
 	 * @apiSuccess {String} advantage1 优势1
 	 * @apiSuccess {String} advantage2 优势2
+	 * @apiSuccess {String} introduce 个人介绍
 	 * @apiSuccess {String} updateBy 创建/修改人
 	 * 
 	 */
@@ -636,11 +703,13 @@ public class WeChatController {
 	 * @apiSuccess {int} age 求职者年龄
 	 * @apiSuccess {char} eduKey 学历类型
 	 * @apiSuccess {String} serveExp 服役经历
+	 * @apiSuccess {String} wantedSalary 期望薪资
 	 * @apiSuccess {String} wantedPlace 期望工作地点
 	 * @apiSuccess {String} wantedJob1 期望职位1
 	 * @apiSuccess {String} wantedJob2 期望职位2
 	 * @apiSuccess {String} advantage1 优势1
 	 * @apiSuccess {String} advantage2 优势2
+	 * @apiSuccess {String} introduce 个人介绍
 	 * @apiSuccess {String} updateBy 创建/修改人
 	 * 
 	 */
@@ -672,11 +741,13 @@ public class WeChatController {
 	 * @apiParam {int} age 求职者年龄
 	 * @apiParam {char} edukey 学历类型
 	 * @apiParam {String} serveExp 服役经历
+	 * @apiParam {String} wantedSalary 期望薪资
 	 * @apiParam {String} wantedPlace 期望工作地点
 	 * @apiParam {String} wantedJob1 期望职位1
 	 * @apiParam {String} wantedJob2 期望职位2
 	 * @apiParam {String} advantage1 优势1
 	 * @apiParam {String} advantage2 优势2
+	 * @apiParam {String} introduce 个人介绍
 	 * @apiParam {String} updateBy 创建/修改人
 	 * 
 	 * @apiSuccess {String} message 返回提示文本
@@ -686,12 +757,15 @@ public class WeChatController {
 	 * @apiSuccess {char} male 求职者性别
 	 * @apiSuccess {int} age 求职者年龄
 	 * @apiSuccess {char} eduKey 学历类型
+	 * @apiSuccess {String} wantedSalary 期望薪资
 	 * @apiSuccess {String} serveExp 服役经历
+	 * @apiSuccess {String} wantedSalary 期望薪资
 	 * @apiSuccess {String} wantedPlace 期望工作地点
 	 * @apiSuccess {String} wantedJob1 期望职位1
 	 * @apiSuccess {String} wantedJob2 期望职位2
 	 * @apiSuccess {String} advantage1 优势1
 	 * @apiSuccess {String} advantage2 优势2
+	 * @apiSuccess {String} introduce 个人介绍
 	 * @apiSuccess {String} updateBy 创建/修改人
 	 */
 	@RequestMapping(value = "/newJobWantedInfo", method = RequestMethod.GET)

@@ -5,6 +5,7 @@
   <resultMap id="UserResultMap" type="com.jmh.model.User" >
     <id 	column="ID" 				property="id" 				jdbcType="VARCHAR" />
     <result column="USER_ID" 			property="userId" 			jdbcType="VARCHAR" />
+    <result column="OPEN_ID" 			property="openId" 			jdbcType="VARCHAR" />
     <result column="USER_NAME" 			property="userName" 		jdbcType="VARCHAR" />
     <result column="PHONE " 			property="phone" 			jdbcType="VARCHAR" />
     <result column="SOCIAL_ID_NUMBER" 	property="socialId" 		jdbcType="VARCHAR" />
@@ -28,7 +29,7 @@
   </resultMap>
    
   <select id="isAuthorized" resultType="boolean" parameterType="com.jmh.model.LoginInfo">
-  	<![CDATA[SELECT COUNT(1) FROM JMH_ROLE WHERE ACCOUNT =  #{loginName} AND PASSWORD = #{loginPwd} AND ACCESS_LEVEL = '0']]> 
+  	<![CDATA[SELECT COUNT(1) FROM JMH_ROLE WHERE ACCOUNT = #{loginName} AND PASSWORD = #{loginPwd} AND ACCESS_LEVEL = '0']]> 
   </select>
   
   <select id="getUserCount" resultType="int">
@@ -52,14 +53,18 @@
   	SELECT CONCAT('jmhs',DATE_FORMAT(now(),'%Y%m%d'), (SELECT NEXTVAL('userSeq')))
   </select>
   
+  <select id="isExistedUser" resultType="boolean" parameterType="java.lang.String">
+  	<![CDATA[SELECT COUNT(1) FROM JMH_USER WHERE OPEN_ID = #{openId}]]> 
+  </select>
+  
   <insert id="newUser" parameterType="com.jmh.model.User" >
-    INSERT INTO JMH_User (USER_ID, USER_NAME, PHONE, SOCIAL_ID_NUMBER, OFFICER_NUMBER, OFFICER_IMAGE, CREATED_BY, CREATED_TIME) 
-    	VALUES (#{userId}, #{userName}, #{phone}, #{socialId}, #{officerNumber}, #{officerImage}, 'ADMIN',  now())
+    INSERT INTO JMH_USER (USER_ID, OPEN_ID, USER_NAME, PHONE, SOCIAL_ID_NUMBER, OFFICER_NUMBER, OFFICER_IMAGE, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{userId}, #{openId}, #{userName}, #{phone}, #{socialId}, #{officerNumber}, #{officerImage}, 'ADMIN',  now())
   </insert>
   
-  <update id="bindPhone" parameterType="com.jmh.model.User">
+  <update id="bindPhone">
   	UPDATE JMH_USER SET 
-  		PHONE = #{phone},
+  		PHONE = #{telephone},
   		UPDATED_BY = 'USER', UPDATED_TIME = now()
   		WHERE OPEN_ID = #{openId}
   </update>

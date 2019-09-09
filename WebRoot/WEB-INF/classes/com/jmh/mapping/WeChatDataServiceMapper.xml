@@ -27,12 +27,15 @@
     <result column="MALE" 			property="male" 		jdbcType="CHAR" />
     <result column="AGE" 			property="age" 			jdbcType="INTEGER" />
     <result column="EDU_TYPE" 		property="eduKey" 		jdbcType="CHAR" />
+    <result column="EDU" 			property="eduValue" 	jdbcType="VARCHAR" />
     <result column="SERVE_EXP" 		property="serveExp" 	jdbcType="VARCHAR" />
+    <result column="WANTED_SALARY" 	property="wantedSalary" jdbcType="VARCHAR" />
     <result column="WANTED_JOB1" 	property="wantedJob1" 	jdbcType="INTEGER" />
     <result column="WANTED_JOB2" 	property="wantedJob2" 	jdbcType="VARCHAR" />
     <result column="WANTED_PLACE" 	property="wantedPlace" 	jdbcType="VARCHAR" />
     <result column="ADVANTAGE1" 	property="advantage1" 	jdbcType="VARCHAR" />
     <result column="ADVANTAGE2" 	property="advantage2" 	jdbcType="VARCHAR" />
+    <result column="INTRODUCE" 		property="introduce" 	jdbcType="VARCHAR" />
     <result column="UPDATED_TIME" 	property="updateTime" 	jdbcType="TIMESTAMP" />
     <result column="UPDATED_BY" 	property="updateBy" 	jdbcType="VARCHAR" />
   </resultMap>
@@ -50,7 +53,7 @@
   </select>
   
   <select id="getAllJobWantedInfo" resultMap="jobWantedResultMap">
-  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, 
+  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, WANTED_SALARY, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, INTRODUCE,
   		IFNULL(JW.UPDATED_TIME, JW.CREATED_TIME) AS UPDATED_TIME, IFNULL(JW.UPDATED_BY, JW.CREATED_BY) AS UPDATED_BY
   		FROM JMH_JOB_WANTED JW
   		LEFT JOIN JMH_TYPE_EDU TE ON JW.EDU_TYPE = TE.EDU_TYPE
@@ -70,7 +73,7 @@
   </select>
   
   <select id="getJobWantedInfo" resultMap="jobWantedResultMap" parameterType="java.lang.String">
-  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, 
+  	SELECT WANTED_ID, WANTED_NAME, MALE, AGE, TE.EDU_TYPE, TE.EDU, WANTED_SALARY, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, INTRODUCE,
   		IFNULL(JW.UPDATED_TIME, JW.CREATED_TIME) AS UPDATED_TIME, IFNULL(JW.UPDATED_BY, JW.CREATED_BY) AS UPDATED_BY
   		FROM JMH_JOB_WANTED JW
   		LEFT JOIN JMH_TYPE_EDU TE ON JW.EDU_TYPE = TE.EDU_TYPE
@@ -116,8 +119,8 @@
   </insert>
   
   <insert id="newJobWantedInfo" parameterType="com.jmh.model.JobWantedInfo" >
-    INSERT INTO JMH_JOB_WANTED (WANTED_ID, WANTED_NAME, MALE, AGE, EDU_TYPE, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, CREATED_BY, CREATED_TIME) 
-    	VALUES (#{wantedId}, #{wantedName}, #{male}, #{age}, #{eduKey}, #{serveExp}, #{wantedJob1}, #{wantedJob2}, #{wantedPlace}, #{advantage1}, #{advantage2}, #{updateBy}, now())
+    INSERT INTO JMH_JOB_WANTED (WANTED_ID, WANTED_NAME, MALE, AGE, EDU_TYPE, WANTED_SALARY, SERVE_EXP, WANTED_JOB1, WANTED_JOB2, WANTED_PLACE, ADVANTAGE1, ADVANTAGE2, INTRODUCE, CREATED_BY, CREATED_TIME) 
+    	VALUES (#{wantedId}, #{wantedName}, #{male}, #{age}, #{eduKey}, #{wantedSalary}, #{serveExp}, #{wantedJob1}, #{wantedJob2}, #{wantedPlace}, #{advantage1}, #{advantage2}, #{introduce}, #{updateBy}, now())
   </insert>
   
   <update id="updateJobProvidedInfo" parameterType="com.jmh.model.JobProvidedInfo" >
@@ -132,6 +135,6 @@
   </delete>
   
   <select id="getPhone" parameterType="java.lang.String" resultType="java.lang.String">
-  	SELECT PHONE FROM JMH_USER WHERE USER_ID = #{openId}
+  	SELECT PHONE FROM JMH_USER WHERE OPEN_ID = #{openId}
   </select>
 </mapper>

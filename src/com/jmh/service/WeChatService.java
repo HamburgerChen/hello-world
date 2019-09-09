@@ -2,6 +2,8 @@ package com.jmh.service;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.jmh.model.CheckCodeResult;
@@ -43,4 +45,6 @@ public interface WeChatService {
 	JobWantedInfo getJobWantedInfo(String wantedId);
 
 	String newJobWantedInfo(JobWantedInfo wantedInfo);
+
+	String processRequest(HttpServletRequest request) throws Exception;
 }

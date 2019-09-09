@@ -24,6 +24,9 @@ import com.jmh.service.AdminService;
  */
 @Service("adminService")
 public class AdminServiceImpl implements AdminService {
+
+	// private static Log log = LogFactory.getLog(AdminServiceImpl.class);
+
 	private AdminDataService adminDataService;
 
 	@Autowired
@@ -93,14 +96,20 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public String bindPhone(String telephone, String openId) {
-		adminDataService.bindPhone();
-		return telephone;
+	public int bindPhone(@Param("telephone") String telephone, @Param("openId") String openId) {
+		int updateCode = adminDataService.bindPhone(telephone, openId);
+		return updateCode;
 	}
 
 	@Override
 	public CompanyRole companyLogin(LoginInfo info) {
 		CompanyRole result = adminDataService.companyLogin(info);
+		return result;
+	}
+
+	@Override
+	public boolean isExistedUser(String openId) {
+		boolean result = adminDataService.isExistedUser(openId);
 		return result;
 	}
 

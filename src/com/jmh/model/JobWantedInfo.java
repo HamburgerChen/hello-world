@@ -18,11 +18,13 @@ public class JobWantedInfo {
 	private char eduKey;
 	private String eduValue;
 	private String serveExp;
+	private String wantedSalary;
 	private String wantedJob1;
 	private String wantedJob2;
 	private String wantedPlace;
 	private String advantage1;
 	private String advantage2;
+	private String introduce;
 	private Timestamp updateTime;
 	private String updateBy;
 
@@ -74,6 +76,14 @@ public class JobWantedInfo {
 		this.eduValue = eduValue;
 	}
 
+	public String getWantedSalary() {
+		return wantedSalary;
+	}
+
+	public void setWantedSalary(String wantedSalary) {
+		this.wantedSalary = wantedSalary;
+	}
+
 	public String getServeExp() {
 		return serveExp;
 	}
@@ -120,6 +130,14 @@ public class JobWantedInfo {
 
 	public void setAdvantage2(String advantage2) {
 		this.advantage2 = advantage2;
+	}
+	
+	public String getIntroduce() {
+		return introduce;
+	}
+
+	public void setIntroduce(String introduce) {
+		this.introduce = introduce;
 	}
 
 	public Timestamp getUpdateTime() {

@@ -44,6 +44,9 @@ public final class WeChatUtils {
 	
 
 	public static boolean checkSignature(String signature, String timestamp, String nonce) {
+		log.info("signature = " + signature);
+		log.info("timestamp = " + timestamp);
+		log.info("nonce = " + nonce);
 		String[] arr = new String[] { token, timestamp, nonce };
 		// 排序
 		Arrays.sort(arr);
@@ -56,7 +59,7 @@ public final class WeChatUtils {
 
 		// sha1加密
 		String temp = getSha1(content.toString());
-
+		log.info("temp = " + temp);
 		return temp.equals(signature);
 	}
 

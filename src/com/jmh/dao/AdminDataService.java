@@ -48,7 +48,9 @@ public interface AdminDataService {
 
 	String newUserId();
 
-	void bindPhone();
+	int bindPhone(@Param("telephone") String telephone, @Param("openId") String openId);
 
 	CompanyRole companyLogin(LoginInfo info);
+
+	boolean isExistedUser(String openId);
 }

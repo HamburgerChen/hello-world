@@ -70,10 +70,14 @@ public class SMSAliUtils {
 	public static String createRandomNumber() {
 		StringBuilder str = new StringBuilder();
 		Random random = new Random();
-		for (int i = 0; i < 6; i++) {
+		int first = random.nextInt(10);
+		if(first == 0){
+			first = 8;
+		}
+		str.append(first);
+		for (int i = 0; i < 5; i++) {
 			str.append(random.nextInt(10));
 		}
 		return str.toString();
 	}
-
 }

@@ -27,6 +27,7 @@ public interface AdminService {
 	int getCompanyCount();
 	int updateCompanyAndRole(Company company, Role role);
 	int newUser(User user);
-	String bindPhone(String telephone, String openId);
+	int bindPhone(String telephone, String openId);
 	CompanyRole companyLogin(LoginInfo info);
+	boolean isExistedUser(String openId);
 }
